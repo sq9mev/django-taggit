@@ -5,11 +5,18 @@ from django.contrib.contenttypes.generic import GenericForeignKey
 from django.db import models, IntegrityError, transaction
 from django.template.defaultfilters import slugify as default_slugify
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.contrib.sites.managers import CurrentSiteManager
+
+from begood_sites.fields import MultiSiteField
 
 
 class TagBase(models.Model):
     name = models.CharField(verbose_name=_('Name'), max_length=100)
     slug = models.SlugField(verbose_name=_('Slug'), unique=True, max_length=100)
+    sites = MultiSiteField()
+
+    objects = models.Manager()
+    on_site = CurrentSiteManager()
 
     def __unicode__(self):
         return self.name

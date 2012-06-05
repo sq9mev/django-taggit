@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _, ugettext
 
+from begood_sites.admin import SiteModelAdmin
 
 from taggit.models import Tag, TaggedItem
 
@@ -15,7 +16,7 @@ class TaggedItemInline(admin.StackedInline):
     model = TaggedItem
 
 
-class TagAdmin(admin.ModelAdmin):
+class TagAdmin(SiteModelAdmin):
     list_display = ["name", tagged_items_count,]
     list_filter = ["namespace",]
     inlines = [
