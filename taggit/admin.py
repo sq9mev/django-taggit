@@ -1,6 +1,8 @@
 import re
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 
 from begood_sites.admin import SiteModelAdmin
 
@@ -8,8 +10,25 @@ from taggit.models import Tag, TaggedItem
 
 
 def tagged_items_count(obj):
-    tagged_items_count = TaggedItem.objects.filter(tag=obj).count()
-    return tagged_items_count
+    """
+    Get the number of tagged items on this site
+    """
+    # To optimize the queries, do one query per content type and aggregate the
+    # number of objects on the current site for that content type.
+    count = 0
+    tagged_items = obj.taggit_taggeditem_items.all()
+    ctypes = tagged_items.values_list('content_type', flat=True).distinct()
+    for ctype_id in ctypes:
+        model_class = ContentType.objects.get(pk=ctype_id).model_class()
+        if hasattr(model_class, 'sites'):
+            obj_ids = tagged_items.filter(content_type=ctype_id).values_list('object_id',
+                flat=True)
+            rel_name = model_class.sites.field.related_query_name()
+            count += model_class.sites.through.objects.filter(
+                **{'site_id': settings.SITE_ID, rel_name+'_id__in': obj_ids}).count()
+        else:
+            count += tagged_items.filter(content_type=ctype_id).count()
+    return count
 tagged_items_count.short_description = _('Tagged Items Count')
 
 
