@@ -22,7 +22,7 @@ def tagged_object_list(request, slug, queryset, **kwargs):
 
 def list_tags(request):
     try:
-        tags = Tag.objects.filter(name__icontains=request.GET['q'])
+        tags = Tag.on_site.filter(name__icontains=request.GET['q'])
         data = [{'value': edit_string_for_tags([t]), 'name': t.name} for t in tags]
     except MultiValueDictKeyError:
         data = ""
