@@ -175,6 +175,12 @@ class _TaggableManager(models.Manager):
 
         for tag in tag_objs:
             self.through.objects.get_or_create(tag=tag, **self._lookup_kwargs())
+            # Add any sites from this object to the tags
+            if hasattr(self.instance, 'sites'):
+                for site in self.instance.sites.all():
+                    tag.sites.add(site)
+            if hasattr(self.instance, 'site'):
+                tag.sites.add(self.instance.site)
 
     @require_instance_manager
     def set(self, *tags):
