@@ -182,10 +182,7 @@
                             values_input.val().search("," + i_input + ",") < 0 &&
                             i_input.length >= opts.minChars &&
                             $("li.active:first", results_holder).length == 0)
-                        if (adding_tag &&
-                            opts.allowAdd &&
-                            confirm("The Tag '" + i_input + "' does not exist.\nDo you want to create it?"))
-                        /*added confirm() + case 13*/
+                        if (adding_tag && opts.allowAdd)
                         {
                             e.preventDefault();
                             var n_data = {};
@@ -193,7 +190,7 @@
                             n_data[opts.selectedValuesProp] = i_input;
                             var lis = $("li", selections_holder).length;
                             add_selected_item(n_data, "00" + (lis + 1));
-                            input.val("")
+                            input.val("");
                         } else if (adding_tag && !opts.allowAdd) {
                             alert(opts.allowAddMessage);
                         } else {
@@ -204,10 +201,10 @@
                         var active = $("li.active:first", results_holder);
                         if (active.length > 0) {
                             active.click();
-                            results_holder.hide()
                         }
+                        results_holder.hide()
                         if (opts.neverSubmit || active.length > 0) {
-                            e.preventDefault()
+                            e.preventDefault();
                         }
                         break;
                     default:
