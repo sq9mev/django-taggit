@@ -21,8 +21,22 @@ class TagBase(models.Model):
     def __unicode__(self):
         return self.name
 
+    def __init__(self, *args, **kwargs):
+        super(TagBase, self).__init__(*args, **kwargs)
+
     class Meta:
         abstract = True
+
+    def clean(self):
+        if not self.pk:
+            # Check if this tag exists on other sites, if so only add the new
+            # sites to it
+            try:
+                tag = Tag.objects.get(name=self.name, slug=self.slug)
+                self.pk = tag.pk
+                self._state.adding = False
+            except Tag.DoesNotExist:
+                pass
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.slug:
@@ -51,6 +65,17 @@ class TagBase(models.Model):
                     self.slug = self.slugify(self.name, i)
         else:
             return super(TagBase, self).save(*args, **kwargs)
+
+    def delete(self, sites):
+        # Remove the sites and delete the tag if on sites are left
+        keep = [s for s in self.sites.all() if s not in sites]
+        if len(keep) > 0:
+            for site in self.sites.all():
+                if not site in keep:
+                    self.sites.remove(site)
+
+        else:
+            super(TagBase, self).delete()
 
     def slugify(self, tag, i=None):
         slug = default_slugify(tag)
