@@ -67,7 +67,7 @@ class TagBase(models.Model):
             return super(TagBase, self).save(*args, **kwargs)
 
     def delete(self, sites):
-        # Remove the sites and delete the tag if on sites are left
+        # Remove the sites and delete the tag if no sites are left
         keep = [s for s in self.sites.all() if s not in sites]
         if len(keep) > 0:
             for site in self.sites.all():
