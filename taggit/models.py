@@ -72,6 +72,14 @@ class TagBase(models.Model):
         if len(keep) > 0:
             for site in self.sites.all():
                 if not site in keep:
+                    # Remove tagging of any items not on the sites in the list keep
+                    tagged_items = self.taggit_taggeditem_items.all()
+                    for item in tagged_items:
+                        if hasattr(item.content_object, 'sites') and \
+                            item.content_object.sites.filter(id__in=[s.id for s in keep]).count() == 0:
+                            item.delete()
+
+                    # Remove site from this tag
                     self.sites.remove(site)
 
         else:
