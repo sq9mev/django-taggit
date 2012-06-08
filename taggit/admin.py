@@ -110,18 +110,14 @@ class TagAdmin(SiteModelAdmin):
         original = obj.sites.all()
         user_sites = request.user.get_sites()
         new_sites = form.cleaned_data['sites']
-        keep = [s for s in original if s not in user_sites]
-        # When adding tags to new sites, keep any original sites.
-        # Otherwise, keep any the user doesn't have access to
-        obj.sites.clear()
-        if change:
-            for site in keep:
-                obj.sites.add(site)
-        else:
-            for site in original:
-                obj.sites.add(site)
-        for site in new_sites:
+        # Don't remove any sites the user doesn't have access to
+        sites_to_remove = [s for s in original if s in user_sites and s not in new_sites]
+        sites_to_add = [s for s in new_sites if s not in original]
+        for site in sites_to_add:
             obj.sites.add(site)
+        # Only remove sites when editing and not when adding tags to new sites
+        if change:
+            obj.delete(sites_to_remove)
 
 
 admin.site.register(Tag, TagAdmin)
