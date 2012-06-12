@@ -3,9 +3,11 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _, ugettext
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 
-from begood_sites.admin import SiteModelAdmin
-from reversion.admin import VersionAdmin
+from begood_sites.admin import SiteModelAdmin, SiteVersionAdmin
+from begood_sites.models import VersionSite
+import reversion
 
 from taggit.models import Tag, TaggedItem
 
@@ -37,20 +39,21 @@ class TaggedItemInline(admin.StackedInline):
     model = TaggedItem
 
 
-class TagAdmin(VersionAdmin, SiteModelAdmin):
+class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
     list_display = ["name", tagged_items_count,]
     list_filter = ["namespace",]
     search_fields = ["name",]
     prepopulated_fields = {'slug': ('name',)}
     list_per_page = 50
     change_form_template = 'admin/reversion_change_form.html'
+    change_list_template = 'admin/change_list.html'
 
     actions = ['delete_selected']
 
     def delete_selected(modeladmin, request, queryset):
         sites = request.user.get_sites()
         for tag in queryset:
-            tag.delete(sites)
+            modeladmin.delete_model(request, tag)
     delete_selected.short_description = _("Delete selected Tags")
 
     def get_site_queryset(self, obj, user):
@@ -61,7 +64,15 @@ class TagAdmin(VersionAdmin, SiteModelAdmin):
         Given a model instance delete it from the database.
         """
         sites = request.user.get_sites()
-        obj.delete(sites)
+        with transaction.commit_on_success():
+            with reversion.create_revision(manage_manually=True):
+                obj.delete(sites)
+                revision = reversion.default_revision_manager.save_revision(
+                    [obj],
+                    user=request.user,
+                    comment=_("Deleted tag."),
+                    meta=[(VersionSite, {'site': site}) for site in sites]
+                    )
 
     def save_form(self, request, form, change):
         """
@@ -69,42 +80,47 @@ class TagAdmin(VersionAdmin, SiteModelAdmin):
         """
         obj = form.instance
         if obj.pk:
-            original = Tag.objects.get(pk=obj.pk)
-            if obj.name != original.name or obj.slug != original.slug:
-                # The tag has been changed. If it's on multiple sites, keep the
-                # original and create a new tag with the new name
-                new_sites = form.cleaned_data['sites']
-                obj_sites = obj.sites.all()
-                if all(s in new_sites for s in obj_sites):
-                    # This tag is not on any other sites, so allow this
-                    # rename as usual
-                    return form.save(commit=False)
-                else:
-                    # Create a new tag with the new name and slug
-                    new_obj = Tag(name=obj.name, slug=obj.slug)
-                    form.instance = new_obj
-                    new_obj.save()
+            try:
+                original = Tag.objects.get(pk=obj.pk)
+                if obj.name != original.name or obj.slug != original.slug:
+                    # The tag has been changed. If it's on multiple sites, keep the
+                    # original and create a new tag with the new name
+                    new_sites = form.cleaned_data['sites']
+                    obj_sites = obj.sites.all()
+                    if all(s in new_sites for s in obj_sites):
+                        # This tag is not on any other sites, so allow this
+                        # rename as usual
+                        return form.save(commit=False)
+                    else:
+                        # Create a new tag with the new name and slug
+                        new_obj = Tag(name=obj.name, slug=obj.slug)
+                        form.instance = new_obj
+                        new_obj.save()
 
-                    # Ugly, but this is the easiest way to make the redirect work
-                    request.path = re.sub("/%d/" % obj.pk, "/%d/" % new_obj.pk, request.path)
+                        # Ugly, but this is the easiest way to make the redirect work
+                        request.path = re.sub("/%d/" % obj.pk, "/%d/" % new_obj.pk, request.path)
 
-                    # Switch the sites from the old to the new tag
-                    for site in new_sites:
-                        obj.sites.remove(site)
-                        new_obj.sites.add(site)
+                        # Switch the sites from the old to the new tag
+                        for site in new_sites:
+                            obj.sites.remove(site)
+                            new_obj.sites.add(site)
 
-                    # Re-tag all items belonging to the changed sites
-                    tagged_items = obj.taggit_taggeditem_items.all()
-                    for item in tagged_items:
-                        if hasattr(item.content_object, 'sites'):
-                            if item.content_object.sites.exclude(id__in=[s.id for s
-                                in new_sites]).count() == 0:
-                                item.delete()
-                            if item.content_object.sites.filter(id__in=[s.id for s
-                                in new_sites]).count() > 0:
-                                item.content_object.tags.add(new_obj)
+                        # Re-tag all items belonging to the changed sites
+                        tagged_items = obj.taggit_taggeditem_items.all()
+                        for item in tagged_items:
+                            if hasattr(item.content_object, 'sites'):
+                                if item.content_object.sites.exclude(id__in=[s.id for s
+                                    in new_sites]).count() == 0:
+                                    item.delete()
+                                if item.content_object.sites.filter(id__in=[s.id for s
+                                    in new_sites]).count() > 0:
+                                    item.content_object.tags.add(new_obj)
 
-                    return new_obj
+                        return new_obj
+            except Tag.DoesNotExist:
+                # When restoring with reversion, the tag has a pk but no
+                # element with that pk exists. Just save it.
+                pass
         return form.save(commit=False)
 
     def save_related(self, request, form, formsets, change):
