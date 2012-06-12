@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
 from begood_sites.admin import SiteModelAdmin
+from reversion.admin import VersionAdmin
 
 from taggit.models import Tag, TaggedItem
 
@@ -36,12 +37,13 @@ class TaggedItemInline(admin.StackedInline):
     model = TaggedItem
 
 
-class TagAdmin(SiteModelAdmin):
+class TagAdmin(VersionAdmin, SiteModelAdmin):
     list_display = ["name", tagged_items_count,]
     list_filter = ["namespace",]
     search_fields = ["name",]
     prepopulated_fields = {'slug': ('name',)}
     list_per_page = 50
+    change_form_template = 'admin/reversion_change_form.html'
 
     actions = ['delete_selected']
 

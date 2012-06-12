@@ -211,4 +211,6 @@ class TaggedItem(GenericTaggedItemBase, TaggedItemBase):
         verbose_name = _("Tagged Item")
         verbose_name_plural = _("Tagged Items")
 
+
 reversion.register(TaggedItem)
+reversion.register(Tag, follow=['taggit_taggeditem_items'])
