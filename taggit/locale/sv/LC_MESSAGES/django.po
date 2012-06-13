@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-08 11:09+0100\n"
+"POT-Creation-Date: 2012-06-13 10:03+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,15 +18,23 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: admin.py:11
+#: admin.py:35
 msgid "Tagged Items Count"
 msgstr "Antal taggade objekt"
+
+#: admin.py:57
+msgid "Delete selected Tags"
+msgstr "Ta bort markerade taggar"
+
+#: admin.py:73
+msgid "Deleted tag."
+msgstr "Tog bort tagg."
 
 #: forms.py:21
 msgid "Please provide a comma-separated list of tags."
 msgstr "Var god ange en kommaseparerad lista av taggar"
 
-#: managers.py:40 managers.py:96 models.py:64
+#: managers.py:40 managers.py:96 models.py:108
 msgid "Tags"
 msgstr "Taggar"
 
@@ -34,43 +42,47 @@ msgstr "Taggar"
 msgid "A comma-separated list of tags."
 msgstr "En kommaseparerad lista av taggar"
 
-#: models.py:11
+#: models.py:14
 msgid "Name"
 msgstr "Namn"
 
-#: models.py:12
+#: models.py:15
 msgid "Slug"
 msgstr "Kortnamn för URL"
 
-#: models.py:56
+#: models.py:96
 msgid "namespace"
 msgstr "namnrymd"
 
-#: models.py:63
+#: models.py:107
 msgid "Tag"
 msgstr "Tagg"
 
-#: models.py:70
+#: models.py:115
 #, python-format
 msgid "%(object)s tagged with %(tag)s"
 msgstr "%(object)s taggade med %(tag)s"
 
-#: models.py:120
+#: models.py:165
 msgid "Object id"
 msgstr "Objekt-ID"
 
-#: models.py:124 models.py:130
+#: models.py:169 models.py:175
 msgid "Content type"
 msgstr "Innehållstyp"
 
-#: models.py:166
+#: models.py:211
 msgid "Tagged Item"
 msgstr "Taggat objekt"
 
-#: models.py:167
+#: models.py:212
 msgid "Tagged Items"
 msgstr "Taggade objekt"
 
-#: widgets.py:17
+#: widgets.py:36
 msgid "Enter Tag Here"
 msgstr "Skriv in taggen här"
+
+#: widgets.py:39
+msgid "Please choose an existing tag"
+msgstr ""
