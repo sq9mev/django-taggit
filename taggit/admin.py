@@ -12,6 +12,26 @@ import reversion
 from taggit.models import Tag, TaggedItem
 
 
+class TagFilter(admin.SimpleListFilter):
+  title = _('tags')
+  parameter_name = 'tags'
+
+  def lookups(self, request, model_admin):
+    """
+    Show only the tags on this site
+    """
+    qs = Tag.on_site.all().order_by('name')
+    lookups = [(t.slug, t.namespace + ": " + unicode(t)) for t in qs]
+    return lookups
+
+  def queryset(self, request, queryset):
+    value = self.value()
+    if value is None:
+      return queryset
+    else:
+      return queryset.filter(tags__slug=str(value))
+
+
 class NamespaceFilter(admin.SimpleListFilter):
   title = _('namespace')
   parameter_name = 'namespace'
