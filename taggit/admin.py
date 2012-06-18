@@ -12,6 +12,27 @@ import reversion
 from taggit.models import Tag, TaggedItem
 
 
+class NamespaceFilter(admin.SimpleListFilter):
+  title = _('namespace')
+  parameter_name = 'namespace'
+
+  def lookups(self, request, model_admin):
+    """
+    Show only the namespaces in the queryset
+    """
+    qs = model_admin.queryset(request)
+    namespaces = qs.values_list('namespace', flat=True).order_by('namespace').distinct()
+    lookups = [(ns, ns) for ns in namespaces]
+    return lookups
+
+  def queryset(self, request, queryset):
+    value = self.value()
+    if value is None:
+      return queryset
+    else:
+      return queryset.filter(namespace=str(value))
+
+
 def tagged_items_count(obj):
     """
     Get the number of tagged items on this site
@@ -41,7 +62,7 @@ class TaggedItemInline(admin.StackedInline):
 
 class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
     list_display = ["name", tagged_items_count,]
-    list_filter = ["namespace",]
+    list_filter = [NamespaceFilter]
     search_fields = ["name",]
     prepopulated_fields = {'slug': ('name',)}
     list_per_page = 50
