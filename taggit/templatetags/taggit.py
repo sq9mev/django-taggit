@@ -9,7 +9,7 @@ def regroup_by_tag(queryset, name=None, slug=None, namespace=None):
   # We need to create a new queryset, otherwise any earlier tag filtering will
   # mess up the extra select
   pk_list = [obj.pk for obj in queryset]
-  qs = queryset.model.objects.all()
+  qs = queryset.model.objects.filter(pk__in=pk_list)
 
   if name is not None:
     qs = qs.filter(tags__name=name)
