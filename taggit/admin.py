@@ -21,7 +21,8 @@ class TagFilter(admin.SimpleListFilter):
     Show only the tags on this site
     """
     qs = Tag.on_site.all().order_by('name')
-    lookups = [(t.slug, t.namespace + ": " + unicode(t)) for t in qs]
+    lookups = [(t.slug, t.namespace + ": " + unicode(t) if t.namespace else
+      unicode(t)) for t in qs]
     return lookups
 
   def queryset(self, request, queryset):
