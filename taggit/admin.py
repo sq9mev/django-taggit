@@ -108,13 +108,13 @@ class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
         sites = request.user.get_sites()
         with transaction.commit_on_success():
             with reversion.create_revision(manage_manually=True):
-                obj.delete(sites)
                 revision = reversion.default_revision_manager.save_revision(
                     [obj],
                     user=request.user,
                     comment=_("Deleted tag."),
                     meta=[(VersionSite, {'site': site}) for site in sites]
                     )
+                obj.delete(sites)
 
     def save_form(self, request, form, change):
         """
