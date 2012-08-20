@@ -15,6 +15,7 @@ from taggit.models import Tag, TaggedItem
 class TagFilter(admin.SimpleListFilter):
   title = _('tags')
   parameter_name = 'tags'
+  max_display_length = 30
 
   def lookups(self, request, model_admin):
     """
@@ -23,6 +24,8 @@ class TagFilter(admin.SimpleListFilter):
     qs = Tag.on_site.all().order_by('name')
     lookups = [(t.slug, t.namespace + ": " + unicode(t) if t.namespace else
       unicode(t)) for t in qs]
+    lookups = [(l[0], l[1][:self.max_display_length-3]+'...' if len(l[1]) >
+      self.max_display_length else l[1]) for l in lookups]
     return lookups
 
   def queryset(self, request, queryset):
