@@ -1,4 +1,3 @@
-import reversion
 import django
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
@@ -171,4 +170,8 @@ class TaggedItem(GenericTaggedItemBase, TaggedItemBase):
         verbose_name = _("Tagged Item")
         verbose_name_plural = _("Tagged Items")
 
-reversion.register(TaggedItem)
+try:
+    import reversion
+    reversion.register(TaggedItem)
+except ImportError:
+    pass
